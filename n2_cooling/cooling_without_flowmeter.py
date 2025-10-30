@@ -91,7 +91,6 @@ class Cooling(object):
         average = sum_of_list/len(list)
         return average
 
-
     def get_temps(self):
         '''
         This func will ask for data by writing "R" in the Serial port. It will receive a Array with 3 elements.
@@ -99,21 +98,18 @@ class Cooling(object):
         '''
         # start process in arduino with command 'R'
         ser_arduino.write(bytes(b'R'))
-       
+        
         time.sleep(1)
 
         # output is from type bytes. Convert to string
         read_values = ser_arduino.readline().decode("utf-8")
         values = read_values.split(" ")
 
-
         tempNTC = values[0]
         tempSHT = values[1]
         humidSHT = values[2]
 
-
         return [tempNTC, tempSHT, humidSHT]
-
 
     def PID_controller(self, user_input):
        
@@ -124,8 +120,7 @@ class Cooling(object):
             This function will include thw hole PID controller. It uses mainly the simple_PID package
             '''
 
-            write_flg = 1
-            rst_flg = 0
+            write_flg = True
 
             while True:
 
@@ -136,19 +131,18 @@ class Cooling(object):
                 print('TEMP NTC: ', measurement[0], "°C")
                 print("TEMP SHT: ", measurement[1], "°C")
                 print("HUMID: ", measurement[2], "% \r\n")#, humids = self.get_temps()
-
                 print('_ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ _ \n')
 
                 # send data to online monitor (first in the converter)
                 if self.socket:
                     send_data(self.socket, data=np.array([measurement[0],measurement[1],measurement[2]], dtype=np.float64)) 
 
-                if write_flg == 1:
+                if write_flg == True:
                     f.write('TEMP NTC in Celsius:   ')
                     f.write('TEMP SHT in Celsius:   ')
                     f.write('HUMIDITY in %:   ')
                     f.write('Time'   +'\n')
-                    write_flg = 0
+                    write_flg = False
 
                 f.write(measurement[0] + "                  ")
                 f.write(measurement[1] + "                  ")
