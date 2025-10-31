@@ -13,6 +13,7 @@ import serial
 from simple_pid import PID
 from datetime import datetime
 from datetime import date
+from .cooling import send_data
 
 
 # we will use the following ports and baudrate
@@ -25,21 +26,6 @@ today = str(date.today())
 now = datetime.now()
 
 current_time = now.strftime("%H:%M:%S")
-
-
-def send_data(socket, data, name="CoolingData"):
-    data_meta_data = dict(
-        name=name,
-        dtype=str(data.dtype),
-        shape=data.shape,
-        timestamp=time.time()
-    )
-
-    try:
-        data_ser = utils.simple_enc(data, meta=data_meta_data)
-        socket.send(data_ser, flags=zmq.NOBLOCK)
-    except zmq.Again:
-        pass
 
 
 class Cooling(object):
@@ -111,13 +97,14 @@ class Cooling(object):
 
         return [tempNTC, tempSHT, humidSHT]
 
-    def PID_controller(self, user_input):
+    def PID_controller(self):
+        time.sleep(2)
        
-        logging.info('Starting cooling process...')
+        logging.info('Starting temperature logging...')
 
         with open('measurement_' + today + current_time + '.txt', 'w') as f:
             '''
-            This function will include thw hole PID controller. It uses mainly the simple_PID package
+            This function logs the temperature and humidity
             '''
 
             write_flg = True
@@ -153,17 +140,6 @@ class Cooling(object):
                 self.temp_table.append([(int(time.time()), measurement[0], measurement[1], measurement[2])])
                 self.temp_table.flush()
 
-                time.sleep(2)
-
-    def run(self, valve=0x000000):
-        time.sleep(2)
-
-        logging.info('Starting...')
-        logging.info('Type in cooling temperature in Celsius:  ')
-        user_input = input()
-        logging.info('To change the cooling temperature restart the cooling.py')
-        self.PID_controller(float(user_input))
-
 
 def main():
     parser = argparse.ArgumentParser(
@@ -180,7 +156,7 @@ def main():
     args = parser.parse_args()
 
     cooling = Cooling( monitor=args.monitor)
-    cooling.run()
+    cooling.PID_controller()
 
 
 if __name__ == "__main__":
